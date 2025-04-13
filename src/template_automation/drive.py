@@ -58,4 +58,5 @@ def copy_template_if_needed(parent_folder_id):
     print(f"✅ Copied 'Template' to '{filename}' (ID: {copied_file_id}).")
 
     delete_sheet_rows(copied_file_id)
+    return copied_file_id
 

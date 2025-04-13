@@ -41,3 +41,35 @@ def delete_sheet_rows(spreadsheet_id):
         ).execute()
         print("🧹 Deleted rows from the new sheet.")
 
+def write_transactions_to_sheet(spreadsheet_id, transactions):
+    sheets_service = get_sheets_service()
+    spreadsheet = sheets_service.spreadsheets().get(spreadsheetId=spreadsheet_id).execute()
+
+    # Get the name of the second sheet
+    sheet_name = spreadsheet["sheets"][1]["properties"]["title"]
+    range_start = f"{sheet_name}!B4:D"
+
+    values = []
+    for txn in transactions:
+        values.append([
+            txn["date"],
+            txn["amount"],
+            txn["description"]
+        ])
+
+    body = {
+        "range": range_start,
+        "majorDimension": "ROWS",
+        "values": values
+    }
+
+    sheets_service.spreadsheets().values().update(
+        spreadsheetId=spreadsheet_id,
+        range=range_start,
+        valueInputOption="USER_ENTERED",
+        body=body
+    ).execute()
+
+    print(f"✅ Transactions written to: {range_start}")
+
+
