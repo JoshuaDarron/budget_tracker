@@ -16,12 +16,12 @@ def get_previous_month_transactions():
     return [
         {
             "date": "2024-03-02",
-            "amount": -45.12,
+            "amount": 45.12,
             "description": "Trader Joe's"
         },
         {
             "date": "2024-03-05",
-            "amount": -80.00,
+            "amount": 80.00,
             "description": "Electric Company"
         }
     ]  # Replace with real parsed data
