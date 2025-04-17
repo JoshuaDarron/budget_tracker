@@ -18,12 +18,12 @@ def get_previous_month_transactions():
     return [
         {
             "date": "2024-03-03",
-            "amount": -29.99,
+            "amount": 29.99,
             "description": "Spotify"
         },
         {
             "date": "2024-03-10",
-            "amount": -120.00,
+            "amount": 120.00,
             "description": "Flight Booking"
         }
     ]

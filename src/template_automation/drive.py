@@ -1,4 +1,5 @@
 import datetime
+import sys
 from .auth import get_drive_service
 from .sheets import delete_sheet_rows
 
@@ -9,12 +10,39 @@ def copy_template_if_needed(parent_folder_id):
     previous_month = now.month - 1 if now.month > 1 else 12
     filename = f"{previous_month:02d}"
 
-    # Check if file already exists
-    query = f"'{parent_folder_id}' in parents and name = '{filename}' and trashed = false"
+    # Calculate the previous month and year
+    now = datetime.datetime.now()
+    previous_month = now.month - 1 if now.month > 1 else 12
+    year = now.year if now.month > 1 else now.year - 1
+    filename = f"{previous_month:02d}"
+
+    # Step 1: Get or create the year folder
+    year_folder_query = (
+        f"'{parent_folder_id}' in parents and name = '{year}' and "
+        f"mimeType = 'application/vnd.google-apps.folder' and trashed = false"
+    )
+    year_folder_result = drive_service.files().list(q=year_folder_query, fields="files(id, name)").execute()
+    year_folders = year_folder_result.get('files', [])
+
+    if year_folders:
+        year_folder_id = year_folders[0]['id']
+    else:
+        year_folder_metadata = {
+            'name': str(year),
+            'parents': [parent_folder_id],
+            'mimeType': 'application/vnd.google-apps.folder'
+        }
+        year_folder = drive_service.files().create(body=year_folder_metadata, fields='id').execute()
+        year_folder_id = year_folder['id']
+        print(f"📁 Created year folder '{year}'")
+
+    # ✅ Step 2: Check if the monthly file already exists in the year folder
+    query = f"'{year_folder_id}' in parents and name = '{filename}' and trashed = false"
     result = drive_service.files().list(q=query, fields="files(id, name)").execute()
     if result.get('files'):
-        print(f"✅ File '{filename}' already exists.")
-        return
+        file_id = result['files'][0]['id']
+        print(f"⚠️ File '{filename}' already exists in year folder. Skipping creation.")
+        sys.exit(0)
 
     # Find the Template
     template_query = f"'{parent_folder_id}' in parents and name = 'Template' and trashed = false"

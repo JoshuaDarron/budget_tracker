@@ -47,7 +47,19 @@ def write_transactions_to_sheet(spreadsheet_id, transactions):
 
     # Get the name of the second sheet
     sheet_name = spreadsheet["sheets"][1]["properties"]["title"]
-    range_start = f"{sheet_name}!B4:D"
+
+    # Read existing data from B4:D to determine the next empty row
+    read_range = f"{sheet_name}!B4:D"
+    existing = sheets_service.spreadsheets().values().get(
+        spreadsheetId=spreadsheet_id,
+        range=read_range
+    ).execute()
+
+    existing_values = existing.get("values", [])
+    next_row_index = 4 + len(existing_values)  # 1-indexed rows
+
+    # Prepare range to write to
+    write_range = f"{sheet_name}!B{next_row_index}:D"
 
     values = []
     for txn in transactions:
@@ -58,18 +70,17 @@ def write_transactions_to_sheet(spreadsheet_id, transactions):
         ])
 
     body = {
-        "range": range_start,
+        "range": write_range,
         "majorDimension": "ROWS",
         "values": values
     }
 
     sheets_service.spreadsheets().values().update(
         spreadsheetId=spreadsheet_id,
-        range=range_start,
+        range=write_range,
         valueInputOption="USER_ENTERED",
         body=body
     ).execute()
 
-    print(f"✅ Transactions written to: {range_start}")
-
+    print(f"✅ Appended {len(values)} transactions starting at row {next_row_index} in {sheet_name}.")
 
